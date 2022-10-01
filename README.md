@@ -4,14 +4,34 @@ Work in progress version of apple-gmux for T2 MacBookPros with both Intel and AM
 
 ## Install
 
+### Enabling the iGPU
+
+Follow [this guide](https://wiki.t2linux.org/guides/hybrid-graphics/).
+
+### Installing the module
+
+#### Arch Based Distros
+
+If you are on an arch based distro and have the
+[`Redecorating-t2`](https://github.com/Redecorating/archlinux-t2-packages)
+repo, you can install with `sudo pacman -S apple-gmux-t2-dkms-git`.
+
+#### Debian Based Distros
+
+If you are on a Debian or Ubuntu based distro and have the
+[adityagarg8.github.io/t2-ubuntu-repo](https://github.com/AdityaGarg8/t2-ubuntu-repo)
+repo, you can install with `sudo apt install apple-gmux-t2`.
+
+#### Other Distros
+
 To install with dkms `sudo dkms install .`
 
 Otherwise, you can do:
 
 ```sh
 make
-sudo rmmod apple-gmux
-sudo insmod ./apple-gmux.ko
+sudo modprobe -r apple-gmux
+sudo modprobe ./apple-gmux.ko
 ```
 
 If you see `apple_gmux: No GPE found for gmux` in the kernel log, that's expected and because the ACPI interrupt code is disabled for now.
