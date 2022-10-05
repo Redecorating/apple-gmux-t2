@@ -669,7 +669,7 @@ static void gmux_clear_interrupts(struct apple_gmux_data *gmux_data)
 
 	/* to clear interrupts write back current status or on T2, write 0 */
 	status = gmux_interrupt_get_status(gmux_data);
-	if (gmux_data->type == apple_gmux_t2)
+	if (gmux_data->type == &apple_gmux_t2)
 		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, 0); //TODO: I think it's more complex than this in reality.
 	else
 		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
