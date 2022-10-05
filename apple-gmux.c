@@ -542,7 +542,8 @@ static int gmux_set_discrete_state(struct apple_gmux_data *gmux_data,
 	reinit_completion(&gmux_data->powerchange_done);
 
 	if (state == VGA_SWITCHEROO_ON) {
-		gmux_write8(gmux_data, GMUX_PORT_DISCRETE_POWER, 1);
+		// Broken for 5300M, probably also broken for 5500M and 5600M
+		gmux_write8(gmux_data, GMUX_PORT_DISCRETE_POWER, 1);//XXX should be 2?
 		gmux_write8(gmux_data, GMUX_PORT_DISCRETE_POWER, 3);
 		pr_debug("Discrete card powered up\n");
 	} else {
@@ -598,10 +599,10 @@ static const struct vga_switcheroo_handler gmux_handler_classic = {
 	.get_client_id = gmux_get_client_id,
 };
 
-/* Poweroff of dgpu is untested and thus disabled for t2. */
 static const struct vga_switcheroo_handler gmux_handler_t2 = {
 	.switchto = gmux_switchto,
 	.get_client_id = gmux_get_client_id,
+	.power_state = gmux_set_power_state,
 };
 
 static const struct apple_gmux_type apple_gmux_pio = {
@@ -666,9 +667,12 @@ static void gmux_clear_interrupts(struct apple_gmux_data *gmux_data)
 {
 	u8 status;
 
-	/* to clear interrupts write back current status */
+	/* to clear interrupts write back current status or on T2, write 0 */
 	status = gmux_interrupt_get_status(gmux_data);
-	gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
+	if (gmux_data->type == apple_gmux_t2)
+		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, 0); //TODO: I think it's more complex than this in reality.
+	else
+		gmux_write8(gmux_data, GMUX_PORT_INTERRUPT_STATUS, status);
 }
 
 static void gmux_notify_handler(acpi_handle device, u32 value, void *context)
@@ -797,7 +801,6 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 		ver_release = gmux_pio_read8(gmux_data, GMUX_PORT_VERSION_RELEASE);
 		if (ver_major == 0xff && ver_minor == 0xff && ver_release == 0xff) {
 			if (gmux_is_indexed(gmux_data)) {
-				mutex_init(&gmux_data->index_lock);
 				gmux_data->type = &apple_gmux_index;
 				version = gmux_read32(gmux_data,
 					GMUX_PORT_VERSION_MAJOR);
@@ -816,6 +819,7 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 
 	pr_info("Found gmux version %d.%d.%d [%s]\n", ver_major, ver_minor,
 	ver_release, gmux_data->type->name);
+	mutex_init(&gmux_data->index_lock);
 
 	memset(&props, 0, sizeof(props));
 	props.type = BACKLIGHT_PLATFORM;
@@ -861,7 +865,7 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 	}
 
 	status = acpi_evaluate_integer(gmux_data->dhandle, "GMGP", NULL, &gpe);
-	if ((!is_mem) && ACPI_SUCCESS(status)) { //FIXME: interrupt spam on t2?
+	if (ACPI_SUCCESS(status)) {
 		gmux_data->gpe = (int)gpe;
 
 		status = acpi_install_notify_handler(gmux_data->dhandle,
