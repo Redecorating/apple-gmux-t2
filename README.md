@@ -41,9 +41,7 @@ sudo modprobe ./apple-gmux.ko
 - [x] Backlight control
 - [ ] Switching Display between GPUs
 	- [x] To preserve state after resume (so you can resume properly when using the igpu!)
-	- [ ] At runtime with vga_switcheroo
-		- [ ] Make amdgpu register with vga_switcheroo
-		- [x] Make intel card register with vga_switcheroo
+	- [x] At runtime with vga_switcheroo
 	- [ ] Get the switched to GPU to output to the display
 - [ ] Interrupts
 - [ ] Power up/down dGPU
