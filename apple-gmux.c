@@ -22,8 +22,13 @@
 #include <linux/delay.h>
 #include <linux/pci.h>
 #include <linux/vga_switcheroo.h>
-#include <acpi/video.h>
 #include <asm/io.h>
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+	#include <acpi/video.h>
+#endif
+
 
 /**
  * DOC: Overview
@@ -851,7 +856,11 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 	 * backlight control and supports more levels than other options.
 	 * Disable the other backlight choices.
 	 */
-	acpi_video_set_dmi_backlight_type(acpi_backlight_vendor);
+	// linux kernel 6.1, deprecated acpi_video_set_dmi_backlight_type
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(6,1,0)
+		acpi_video_set_dmi_backlight_type(acpi_backlight_vendor);
+	#endif
+
 	apple_bl_unregister();
 
 	gmux_data->power_state = VGA_SWITCHEROO_ON;
@@ -967,8 +976,9 @@ static void gmux_remove(struct pnp_dev *pnp)
 		release_region(gmux_data->iostart, gmux_data->iolen);
 	apple_gmux_data = NULL;
 	kfree(gmux_data);
-
-	acpi_video_register();
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)	
+		acpi_video_register();
+	#endif
 	apple_bl_register();
 }
 
