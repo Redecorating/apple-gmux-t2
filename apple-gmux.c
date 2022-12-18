@@ -24,6 +24,7 @@
 #include <linux/vga_switcheroo.h>
 #include <acpi/video.h>
 #include <asm/io.h>
+#include <linux/version.h>
 
 /**
  * DOC: Overview
@@ -852,10 +853,12 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 	 * Disable the other backlight choices.
 	 */
 	// linux kernel 6.1, deprecated acpi_video_set_dmi_backlight_type
-	// acpi_video_set_dmi_backlight_type(acpi_backlight_vendor);
-	
-	if (acpi_video_get_backlight_type() != acpi_backlight_vendor)
-		return 0;
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(6,1,0)
+		acpi_video_set_dmi_backlight_type(acpi_backlight_vendor);
+	#else
+		if (acpi_video_get_backlight_type() != acpi_backlight_vendor)
+			return 0;
+	#endif
 
 	apple_bl_unregister();
 
