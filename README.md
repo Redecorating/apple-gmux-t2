@@ -1,3 +1,7 @@
+# This version is outdated
+
+New version is going to be upstream soon hopefully, and is already in t2 kernels with versions above 6.1.12-2. https://github.com/t2linux/kernel/issues/2 is now the place tracking the status of GMUX on t2 macs.
+
 # apple-gmux T2
 
 Work in progress version of apple-gmux for T2 MacBookPros with both Intel and
